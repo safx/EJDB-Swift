@@ -1,0 +1,37 @@
+#!/bin/sh
+
+PROJECT_ROOT_DIR=$( cd "$(dirname "${BASH_SOURCE[0]}")" && cd .. && pwd )
+BUILD_DIR="$PROJECT_ROOT_DIR/build"
+
+function apply_ejdb_patch() {
+    target_file="$PROJECT_ROOT_DIR/External/ejdb/CMakeLists.txt"
+    patch_file="$PROJECT_ROOT_DIR/script/ios-build.patch"
+    opt=$1
+
+    cd "$PROJECT_ROOT_DIR/External/ejdb"
+    git apply "$patch_file" $opt
+}
+
+function gen_cmake() {
+    cd "$PROJECT_ROOT_DIR"
+    rm -fr build
+    mkdir build
+    cd build
+    cmake -DCMAKE_TOOLCHAIN_FILE=../External/ios-cmake/toolchain/iOS.cmake -DIOS_PLATFORM=SIMULATOR64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=out ../External/ejdb
+}
+
+function build() {
+    cd "$BUILD_DIR"
+    make install
+}
+
+
+
+pushd .
+
+apply_ejdb_patch
+gen_cmake
+apply_ejdb_patch -R
+build
+
+popd

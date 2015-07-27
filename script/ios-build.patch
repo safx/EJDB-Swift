@@ -1,0 +1,27 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5d6c68d..ae06d4a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -49,6 +49,22 @@ else(CMAKE_SIZEOF_VOID_P MATCHES 8)
+ 	set(PROJECT_ARCH "x86")
+ endif(CMAKE_SIZEOF_VOID_P MATCHES 8)
+ 
++IF (IOS_PLATFORM)
++  set(CMAKE_C_COMPILER "${CMAKE_OSX_SYSROOT}/../../../../../Toolchains/XcodeDefault.xctoolchain/usr/bin/clang")
++  set(CMAKE_CXX_COMPILER "${CMAKE_C_COMPILER}++")
++
++  set(IOS_CFLAGS "-fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT}")
++  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${IOS_CFLAGS}")
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IOS_CFLAGS} -std=gnu++11 -stdlib=libc++")
++
++  IF (${IOS_PLATFORM} STREQUAL "SIMULATOR64")
++    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mios-simulator-version-min=6.0")
++    set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -mios-simulator-version-min=6.0")
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
++    set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -mios-simulator-version-min=6.0")
++  ENDIF()
++ENDIF()
++
+ include(GNUInstallDirs)
+ include(EjdbUtils)
+ 

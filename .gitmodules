@@ -1,0 +1,6 @@
+[submodule "External/ios-cmake"]
+	path = External/ios-cmake
+	url = https://github.com/cristeab/ios-cmake
+[submodule "External/ejdb"]
+	path = External/ejdb
+	url = https://github.com/Softmotions/ejdb.git
