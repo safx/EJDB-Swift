@@ -13,15 +13,20 @@ public protocol RawMemoryConvertible {
 }
 
 public final class OpaqueList<T: RawMemoryConvertible> {
-    var list: UnsafeMutablePointer<TCLIST>
+    private(set) var list: UnsafeMutablePointer<TCLIST>
 
-    init(list: UnsafeMutablePointer<TCLIST>) {
+    public init(list: UnsafeMutablePointer<TCLIST>) {
         self.list = list
     }
 
     deinit {
-        tclistdel(list)
+        ejdbqresultdispose(list)
     }
+
+    public var count: Int {
+        return Int(ejdbqresultnum(list))
+    }
+
 }
 
 extension OpaqueList: SequenceType {
@@ -33,10 +38,10 @@ extension OpaqueList: SequenceType {
 }
 
 public final class OpaqueItemGenerator<T: RawMemoryConvertible>: GeneratorType {
-    let list: UnsafeMutablePointer<TCLIST>
-    var index: Int = 0
+    private      let list: UnsafeMutablePointer<TCLIST>
+    private(set) var index: Int = 0
 
-    init(list: UnsafeMutablePointer<TCLIST>) {
+    public init(list: UnsafeMutablePointer<TCLIST>) {
         self.list = list
     }
 

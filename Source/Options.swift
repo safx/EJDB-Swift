@@ -9,16 +9,17 @@
 import Foundation
 
 
+
 public struct OpenMode : OptionSetType {
     public let rawValue: Int
     public init(rawValue: Int) { self.rawValue = rawValue }
 
-    static var Reader:         OpenMode { return OpenMode(rawValue: JBOREADER) }
-    static var Writer:         OpenMode { return OpenMode(rawValue: JBOWRITER) }
-    static var Create:         OpenMode { return OpenMode(rawValue: JBOCREAT) }
-    static var Truncate:       OpenMode { return OpenMode(rawValue: JBOTRUNC) }
-    static var NoLock:         OpenMode { return OpenMode(rawValue: JBONOLCK) }
-    static var LockNoBlocking: OpenMode { return OpenMode(rawValue: JBOLCKNB) }
-    static var Sync:           OpenMode { return OpenMode(rawValue: JBOTSYNC) }
+    public static var Reader:         OpenMode { return OpenMode(rawValue: JBOREADER) }
+    public static var Writer:         OpenMode { return OpenMode(rawValue: JBOWRITER) }
+    public static var Create:         OpenMode { return OpenMode(rawValue: JBOCREAT) }
+    public static var Truncate:       OpenMode { return OpenMode(rawValue: JBOTRUNC) }
+    public static var NoLock:         OpenMode { return OpenMode(rawValue: JBONOLCK) }
+    public static var LockNoBlocking: OpenMode { return OpenMode(rawValue: JBOLCKNB) }
+    public static var Sync:           OpenMode { return OpenMode(rawValue: JBOTSYNC) }
 }
 

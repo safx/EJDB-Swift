@@ -29,49 +29,51 @@ class EJDB_SwiftTests: XCTestCase {
         db.open(dbPath, mode: [.Writer, .Create, .Truncate])
         let col = Collection(name: "foo", database: db)
 
-        let b1: BSONBuilder = [
+        let b1: BSON = [
             "address": "Somewhere",
             "name": "foreign",
             "age": 443,
             "hoge": false
         ]
-        col.save(b1.toBSON())
+        col.save(b1)
 
-        let b2: BSONBuilder = [
+        let b2: BSON = [
             "address": "Canada",
             "name": "fooobar",
             "age": 999,
             "hoge": true
         ]
-        col.save(b2.toBSON())
+        col.save(b2)
 
-        let q: BSONBuilder = [
-            "name": ["$begin": "fo"],
+        let b3: BSON = [
+            "address": "Canada",
+            "name": "barrrr",
+            "age": 1024,
+            "hoge": true
         ]
-        do {
-            let qry = Query(query: q.toBSON(true), database: db)
-            col.query(qry).map { it -> () in
-                for var t = it.next(); t != BSON_EOO; t = it.next() {
-                    //print(t)
-                    print(it.key)
-                    switch t.rawValue {
-                    case BSON_STRING.rawValue:
-                        print(it.stringValue)
-                    case BSON_INT.rawValue:
-                        print(it.intValue)
-                    case BSON_BOOL.rawValue:
-                        print(it.boolValue)
-                    default:
-                        ()
-                    }
+        col.save(b3)
+
+        let qry = Query(query: BSON(query: [ "name": ["$begin": "fo"] ]), database: db)
+        col.query(qry).map { it -> () in
+            for var t = it.next(); t != BSON_EOO; t = it.next() {
+                //print(t)
+                print(it.key)
+                switch t.rawValue {
+                case BSON_OID.rawValue:
+                    print(it.oid)
+                case BSON_STRING.rawValue:
+                    print(it.stringValue)
+                case BSON_INT.rawValue:
+                    print(it.intValue)
+                case BSON_BOOL.rawValue:
+                    print(it.boolValue)
+                default:
+                    ()
                 }
-                
-                return
             }
         }
-
     }
-    
+
     func testPerformanceExample() {
         // This is an example of a performance test case.
         self.measureBlock {

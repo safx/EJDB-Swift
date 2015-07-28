@@ -10,9 +10,9 @@ import Foundation
 
 
 public final class Query {
-    var q: COpaquePointer
+    internal(set) var q: COpaquePointer
 
-    init(query: BSON, database: Database) {
+    public init(query: BSON, database: Database) {
         q = ejdbcreatequery(database.jb, &query.bs, nil, 0, nil) // FIXME: fixed param
         assert(q != nil)
     }

@@ -16,6 +16,7 @@
 		8DBF3A1C1B63DEA90062E313 /* EJDB-Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 8DBF3A1B1B63DEA90062E313 /* EJDB-Swift.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8DBF3A231B63DEA90062E313 /* EJDBSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DBF3A181B63DEA90062E313 /* EJDBSwift.framework */; };
 		8DBF3A281B63DEA90062E313 /* EJDB_SwiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBF3A271B63DEA90062E313 /* EJDB_SwiftTests.swift */; };
+		8DC4C3101B67D34D0050134B /* OID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC4C30F1B67D34D0050134B /* OID.swift */; };
 		8DFAFEBB1B652289002A6878 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFAFEBA1B652289002A6878 /* Error.swift */; };
 		8DFAFEC01B6527C9002A6878 /* EJDB-Swift-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 8DFAFEBF1B6527C9002A6878 /* EJDB-Swift-Bridging-Header.h */; };
 		8DFAFED51B652A9D002A6878 /* libejdb-1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DFAFED41B652A9D002A6878 /* libejdb-1.a */; };
@@ -53,6 +54,7 @@
 		8DBF3A221B63DEA90062E313 /* EJDB-SwiftTests-ios.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "EJDB-SwiftTests-ios.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DBF3A271B63DEA90062E313 /* EJDB_SwiftTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EJDB_SwiftTests.swift; sourceTree = "<group>"; };
 		8DBF3A291B63DEA90062E313 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8DC4C30F1B67D34D0050134B /* OID.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OID.swift; sourceTree = "<group>"; };
 		8DFAFEBA1B652289002A6878 /* Error.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		8DFAFEBF1B6527C9002A6878 /* EJDB-Swift-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "EJDB-Swift-Bridging-Header.h"; sourceTree = "<group>"; };
 		8DFAFED41B652A9D002A6878 /* libejdb-1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libejdb-1.a"; path = "build/out/lib/libejdb-1.a"; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				8D61C1C81B668A3900701287 /* Query.swift */,
 				8D61C1C41B6689D000701287 /* BSON.swift */,
 				8D61C1C61B668A1A00701287 /* List.swift */,
+				8DC4C30F1B67D34D0050134B /* OID.swift */,
 				8D61C1CA1B668A5C00701287 /* Options.swift */,
 				8DFAFEBA1B652289002A6878 /* Error.swift */,
 				8DBF3A1B1B63DEA90062E313 /* EJDB-Swift.h */,
@@ -276,6 +279,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8DC4C3101B67D34D0050134B /* OID.swift in Sources */,
 				8D61C1C31B6689AA00701287 /* Collection.swift in Sources */,
 				8D61C1C11B66898E00701287 /* Database.swift in Sources */,
 				8DFAFEBB1B652289002A6878 /* Error.swift in Sources */,

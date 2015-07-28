@@ -9,10 +9,13 @@
 import Foundation
 
 
-public final class Collection {
-    let coll: COpaquePointer
 
-    init(name: String, database: Database) { // FIXME: EJCOLLOPTS to args
+public final class Collection {
+    public typealias QueryResult = OpaqueList<BSONIterator>
+
+    private let coll: COpaquePointer
+
+    public init(name: String, database: Database) { // FIXME: EJCOLLOPTS to args
         assert(name.characters.count < Int(JBMAXCOLNAMELEN))
         coll = name.withCString { str in
             return ejdbcreatecoll(database.jb, str, nil)
@@ -20,18 +23,41 @@ public final class Collection {
         assert(coll != nil)
     }
 
-    func save(bson: BSON) { // FIXME: add oid to args
-        var oid: bson_oid_t = bson_oid_t()
-        ejdbsavebson(coll, &bson.bs, &oid)
+    internal init(coll: COpaquePointer) {
+        self.coll = coll
     }
 
-    func query(query: Query) -> OpaqueList<BSONIterator> {
+    public func save(bson: BSON, oid: OID = OID()) {
+        ejdbsavebson(coll, &bson.bs, &oid.oid)
+    }
+
+    public func remove(oid: OID) -> Bool {
+        return ejdbrmbson(coll, &oid.oid)
+    }
+
+    public func load(oid: OID) -> BSON {
+        let b = ejdbloadbson(coll, &oid.oid)
+        assert(b != nil)
+        return BSON(b: b.memory)
+    }
+
+    public func query(query: Query) -> QueryResult {
         var count: UInt32 = 0
         let result = ejdbqryexecute(coll, query.q, &count, 0, nil) // FIXME: fixed param
         return OpaqueList(list: result)
     }
 
-    func sync() -> Bool {
+    public func sync() -> Bool {
         return ejdbsyncoll(coll)
     }
+
+    public func transaction(@noescape closure: Collection -> Bool) {
+        ejdbtranbegin(coll)
+        if closure(self) {
+            ejdbtrancommit(coll)
+        } else {
+            ejdbtranabort(coll)
+        }
+    }
 }
+

@@ -9,9 +9,36 @@
 import Foundation
 
 
-public final class BSON {
+public typealias BSONType = bson_type
 
-    var bs: bson
+
+public final class BSON: DictionaryLiteralConvertible {
+    public typealias Key = String
+    public typealias Value = AnyObject
+    public typealias Pair = (Key, Value)
+
+    internal(set) var bs: bson
+
+    public init(_ elements: [String: AnyObject]) {
+        bs = bson()
+        bson_init(&bs)
+        let b = BSONBuilder(elements)
+        b.setToBSON(self)
+    }
+
+    public init(query elements: [String: AnyObject]) {
+        bs = bson()
+        bson_init_as_query(&bs)
+        let b = BSONBuilder(elements)
+        b.setToBSON(self)
+    }
+
+    public required init(dictionaryLiteral elements: Pair...) {
+        bs = bson()
+        bson_init(&bs)
+        let b = BSONBuilder(elements: elements)
+        b.setToBSON(self)
+    }
 
     internal init(query: Bool = false) {
         bs = bson()
@@ -22,11 +49,15 @@ public final class BSON {
         }
     }
 
+    internal init(b: bson) {
+        self.bs = b
+    }
+
     deinit {
         bson_destroy(&bs)
     }
 
-    func append(name: String, value: String) -> BSON? {
+    public func append(name: String, value: String) -> BSON? {
         return name.withCString { n in
             value.withCString { v in
                 return bson_append_string(&bs, n, v) == BSON_OK ? self : nil
@@ -34,59 +65,81 @@ public final class BSON {
         }
     }
 
-    func append(name: String, value: Int) -> BSON? {
+    public func append(name: String, value: Int) -> BSON? {
         return name.withCString { n in
             // FIXME value range in Int32
             return bson_append_int(&bs, n, Int32(value)) == BSON_OK ? self : nil
         }
     }
 
-    func appendObject(name: String) -> BSON? {
+    public func appendObject(name: String) -> BSON? {
         return name.withCString { n in
             return bson_append_start_object(&bs, n) == BSON_OK ? self : nil
         }
     }
 
-    func appendObjectFinish() -> BSON? {
+    public func appendObjectFinish() -> BSON? {
         return bson_append_finish_object(&bs) == BSON_OK ? self : nil
     }
 
-    func finish() -> BSON? {
+    public func finish() -> BSON? {
         return bson_finish(&bs) == 0 ? self : nil
     }
 }
 
 
 public final class BSONIterator: RawMemoryConvertible {
-    var iter: UnsafeMutablePointer<bson_iterator>
+    private var iter: UnsafeMutablePointer<bson_iterator>
 
     public required init(memory: UnsafePointer<Int8>) {
         iter = bson_iterator_create()
         bson_iterator_from_buffer(iter, memory)
     }
 
-    func next() -> bson_type {
+    public func next() -> BSONType {
         return bson_iterator_next(iter)
     }
 
-    var more: Bool {
+    public var more: Bool {
         return bson_iterator_more(iter) == 0
     }
 
-    var key: String {
+    public var key: String {
         return String.fromCString(bson_iterator_key(iter)) ?? ""
     }
 
-    var stringValue: String {
+    public var oid: OID {
+        let id = bson_iterator_oid(iter)
+        assert(id != nil)
+        return OID(oid: id.memory)
+    }
+
+    public var stringValue: String {
         return String.fromCString(bson_iterator_string(iter)) ?? ""
     }
 
-    var intValue: Int {
+    public var intValue: Int {
         return Int(bson_iterator_int(iter))
     }
 
-    var boolValue: Bool {
+    public var doubleValue: Double {
+        return bson_iterator_double(iter)
+    }
+
+    public var boolValue: Bool {
         return Bool(bson_iterator_int(iter) != 0)
+    }
+
+    public var dateValue: NSDate {
+        let t = bson_iterator_time_t(iter)
+        return NSDate(timeIntervalSince1970: NSTimeInterval(t))
+    }
+
+    public var dataValue: NSData {
+        //let type = bson_iterator_bin_type(iter)
+        let len  = bson_iterator_bin_len(iter)
+        let data = bson_iterator_bin_data(iter)
+        return NSData(bytes: data, length: Int(len))
     }
 }
 
@@ -96,9 +149,19 @@ public final class BSONBuilder: DictionaryLiteralConvertible {
     public typealias Value = AnyObject
     public typealias Pair = (Key, Value)
 
-    let pairs: [Pair]
+    private let pairs: [Pair]
 
-    required public init(dictionaryLiteral elements: Pair...) {
+    public required init(_ elements: [String: AnyObject]) {
+        pairs = elements.map { e in
+            return (e.0, e.1)
+        }
+    }
+
+    internal init(elements: [Pair]) {
+        self.pairs = elements
+    }
+
+    public required init(dictionaryLiteral elements: Pair...) {
         self.pairs = elements
     }
 
@@ -120,7 +183,6 @@ public final class BSONBuilder: DictionaryLiteralConvertible {
     }
 
     private func constructBSON(bsonObj: BSON, key: String, value: AnyObject) {
-        print(key)
         key.withCString { k -> () in
             if value is NSNull {
                 bson_append_null(&bsonObj.bs, k)
@@ -155,16 +217,18 @@ public final class BSONBuilder: DictionaryLiteralConvertible {
         }
     }
 
-    func toBSON(query: Bool = false) -> BSON {
+    public func toBSON(query: Bool = false) -> BSON {
         let bsonObj = BSON(query: query)
+        setToBSON(bsonObj)
+        return bsonObj
+    }
 
+    internal func setToBSON(bsonObj: BSON) {
         for kv in pairs {
             constructBSON(bsonObj, key: kv.0, value: kv.1)
         }
 
         bson_finish(&bsonObj.bs)
-
-        return bsonObj
     }
 }
 

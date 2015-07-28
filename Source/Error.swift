@@ -17,7 +17,7 @@ public enum DatabaseError: ErrorType {
 
     case Unknown
 
-    init(errorCode: Int) {
+    public init(errorCode: Int) {
         switch errorCode {
         case JBEINVALIDCOLNAME:   self = .InvalidColumnName
         case JBEINVALIDBSON:      self = .InvalidBSON

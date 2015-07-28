@@ -11,9 +11,9 @@ import Foundation
 
 public final class Database {
 
-    let jb: COpaquePointer
+    internal let jb: COpaquePointer
 
-    init() {
+    public init() {
         jb = ejdbnew()
     }
 
@@ -21,31 +21,46 @@ public final class Database {
         close()
     }
 
-    func open(path: String, mode: OpenMode) -> Bool { // TODO: throws
-        return path.withCString { str -> Bool in
+    public func open(path: String, mode: OpenMode) -> Bool { // TODO: throws
+        return path.withCString { str in
             return ejdbopen(jb, str, Int32(mode.rawValue))
         }
     }
 
-    func close() -> Bool { // TODO: throws
+    public func close() -> Bool { // TODO: throws
         return ejdbclose(jb)
     }
 
-    func delete() {
+    public func delete() {
         ejdbdel(jb)
     }
 
-    var isOpen: Bool {
+    public var isOpen: Bool {
         return ejdbisopen(jb)
     }
 
-    /*func getCollection(name: String) { // FIXME
-    return name.withCString { str in
-    ejdbgetcoll(jb, name)
+    public var meta: BSON {
+        let m = ejdbmeta(jb)
+        assert(m != nil)
+        return BSON(b: m.memory)
     }
-    }*/
 
-    func sync() -> Bool {
+    public func sync() -> Bool {
         return ejdbsyncdb(jb)
     }
+
+    public func removeCollection(name: String, database: Database, unlinkFile: Bool) {
+        return name.withCString { str in
+            ejdbrmcoll(jb, str, unlinkFile)
+        }
+    }
+    
+    public func getCollection(name: String) -> Collection {
+        return name.withCString { str in
+            let coll = ejdbgetcoll(jb, str)
+            assert(coll != nil)
+            return Collection(coll: coll)
+        }
+    }
+
 }
