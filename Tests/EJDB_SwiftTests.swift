@@ -32,7 +32,7 @@ class EJDB_SwiftTests: XCTestCase {
         let b1: BSON = [
             "address": "Somewhere",
             "name": "foreign",
-            "age": 443,
+            "age": [10, 20, 30],
             "hoge": false
         ]
         col.save(b1)
@@ -40,7 +40,7 @@ class EJDB_SwiftTests: XCTestCase {
         let b2: BSON = [
             "address": "Canada",
             "name": "fooobar",
-            "age": 999,
+            "age": [14, 20],
             "hoge": true
         ]
         col.save(b2)
@@ -48,30 +48,14 @@ class EJDB_SwiftTests: XCTestCase {
         let b3: BSON = [
             "address": "Canada",
             "name": "barrrr",
-            "age": 1024,
+            "age": [1024],
             "hoge": true
         ]
         col.save(b3)
 
         let qry = Query(query: BSON(query: [ "name": ["$begin": "fo"] ]), database: db)
-        col.query(qry).map { it -> () in
-            for var t = it.next(); t != BSON_EOO; t = it.next() {
-                //print(t)
-                print(it.key)
-                switch t.rawValue {
-                case BSON_OID.rawValue:
-                    print(it.oid)
-                case BSON_STRING.rawValue:
-                    print(it.stringValue)
-                case BSON_INT.rawValue:
-                    print(it.intValue)
-                case BSON_BOOL.rawValue:
-                    print(it.boolValue)
-                default:
-                    ()
-                }
-            }
-        }
+        let res = col.query(qry).map { $0.object }
+        print(res)
     }
 
     func testPerformanceExample() {

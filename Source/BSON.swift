@@ -57,6 +57,61 @@ public final class BSON: DictionaryLiteralConvertible {
         bson_destroy(&bs)
     }
 
+    public var size: Int {
+        return Int(bson_size(&bs))
+    }
+
+    public var data: UnsafePointer<Int8> {
+        return bson_data(&bs)
+    }
+}
+
+// MARK: - BSON utils
+
+extension BSON {
+    public func duplicate() -> BSON {
+        let b = bson_dup(&bs)
+        return BSON(b: b.memory)
+    }
+
+    public func merge(bson: BSON, overwrite: Bool = false, recursive: Bool = false) -> BSON {
+        let out = BSON(query: false)
+        let ow  = Int32(overwrite ? 1 : 0)
+        if recursive {
+            bson_merge_recursive(&bs, &bson.bs, ow, &out.bs)
+        } else {
+            bson_merge(&bs, &bson.bs, ow, &out.bs)
+        }
+        return out
+    }
+
+    public func validate(checkDots dot: Bool = false, checkDollars dollar: Bool = false) -> Bool {
+        return BSON_OK == bson_validate(&bs, dot, dollar)
+    }
+
+    public static func fromJSONString(string: String) -> BSON {
+        let bs = string.withCString { s in
+            return json2bson(s)
+        }
+        return BSON(b: bs.memory)
+    }
+
+    public func toJSONString() -> String {
+        let buf = UnsafeMutablePointer<UnsafeMutablePointer<Int8>>.alloc(1)
+        let len = UnsafeMutablePointer<Int32>.alloc(1)
+        defer {
+            buf.destroy()
+            len.destroy()
+        }
+        bson2json(data, buf, len)
+
+        return String.fromCString(buf.memory) ?? ""
+    }
+}
+
+// MARK: - BSON construct functions
+
+extension BSON {
     public func append(name: String, value: String) -> BSON? {
         return name.withCString { n in
             value.withCString { v in
@@ -91,6 +146,10 @@ public final class BSON: DictionaryLiteralConvertible {
 public final class BSONIterator: RawMemoryConvertible {
     private var iter: UnsafeMutablePointer<bson_iterator>
 
+    public required init() {
+        iter = bson_iterator_create()
+    }
+
     public required init(memory: UnsafePointer<Int8>) {
         iter = bson_iterator_create()
         bson_iterator_from_buffer(iter, memory)
@@ -102,6 +161,18 @@ public final class BSONIterator: RawMemoryConvertible {
 
     public var more: Bool {
         return bson_iterator_more(iter) == 0
+    }
+
+    public func find(name: String, bson: BSON) -> bson_type {
+        return name.withCString { p in
+            return bson_find(iter, &bson.bs, p)
+        }
+    }
+
+    public func find(path: String) -> bson_type {
+        return path.withCString { p in
+            return bson_find_fieldpath_value(p, iter)
+        }
     }
 
     public var key: String {
@@ -122,6 +193,10 @@ public final class BSONIterator: RawMemoryConvertible {
         return Int(bson_iterator_int(iter))
     }
 
+    public var longValue: Int64 {
+        return Int64(bson_iterator_long(iter))
+    }
+
     public var doubleValue: Double {
         return bson_iterator_double(iter)
     }
@@ -135,11 +210,70 @@ public final class BSONIterator: RawMemoryConvertible {
         return NSDate(timeIntervalSince1970: NSTimeInterval(t))
     }
 
-    public var dataValue: NSData {
+    public var regexValue: NSRegularExpression {
+        do {
+            return try NSRegularExpression(pattern: stringValue, options: [])
+        } catch {
+            return NSRegularExpression()
+        }
+    }
+
+    public var binaryData: NSData {
         //let type = bson_iterator_bin_type(iter)
         let len  = bson_iterator_bin_len(iter)
         let data = bson_iterator_bin_data(iter)
         return NSData(bytes: data, length: Int(len))
+    }
+
+    public var subIterator: BSONIterator {
+        let it = BSONIterator()
+        bson_iterator_subiterator(iter, it.iter)
+        return it
+    }
+
+    public var object: [String: AnyObject] {
+        var d = [String: AnyObject]()
+        for var t = next(); t != BSON_EOO; t = next() {
+            d[key] = anyObject(t)
+        }
+        return d
+    }
+
+    public var array: [AnyObject] {
+        var d = [AnyObject]()
+        for var t = next(); t != BSON_EOO; t = next() {
+            d.append(anyObject(t))
+        }
+        return d
+    }
+
+    private func anyObject(t: bson_type) -> AnyObject {
+        switch t.rawValue {
+        case BSON_UNDEFINED.rawValue: return NSNull()
+        case BSON_NULL.rawValue:      return NSNull()
+        case BSON_OID.rawValue:       return oid.description
+        case BSON_BOOL.rawValue:      return boolValue
+        case BSON_INT.rawValue:       return intValue
+        case BSON_LONG.rawValue:      return Int(longValue) // TODO: overflow check
+        case BSON_DOUBLE.rawValue:    return doubleValue
+        case BSON_STRING.rawValue:    return stringValue
+        case BSON_DATE.rawValue:      return dateValue
+        case BSON_BINDATA.rawValue:   return binaryData
+        case BSON_REGEX.rawValue:     return regexValue
+        case BSON_OBJECT.rawValue:    return subIterator.object
+        case BSON_ARRAY.rawValue:     return subIterator.array
+        case BSON_CODE.rawValue:
+            () // TODO
+        case BSON_SYMBOL.rawValue:
+            () // TODO
+        case BSON_CODEWSCOPE.rawValue:
+            () // TODO
+        case BSON_TIMESTAMP.rawValue:
+            () // TODO
+        default:
+            ()
+        }
+        return NSNull()
     }
 }
 
@@ -231,5 +365,3 @@ public final class BSONBuilder: DictionaryLiteralConvertible {
         bson_finish(&bsonObj.bs)
     }
 }
-
-
